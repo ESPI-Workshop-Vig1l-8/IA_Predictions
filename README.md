@@ -1,6 +1,32 @@
 ## Description
 Maintenance prédictive (Isolation Forest)
+L'objectif est de surveiller un flux de données provenant de capteurs et de détecter automatiquement des comportements inhabituels à partir de plusieurs mesures, la température, l'humidité et le taux de gaz.
 
+Le système utilise un modèle de Machine Learning entraîné sur des données normales afin d'identifier des situations potentiellement anormales.
+
+Lorsqu'une anomalie est détectée pendant plusieurs fenêtres consécutives, une alerte est déclenchée.
+
+Le fonctionnement général du système est le suivant :
+Données des capteurs ( ou générées dans le cas du test)
+        │
+        ▼
+Lecture des données
+        │
+        ▼
+Extraction des caractéristiques
+        │
+        ▼
+Fenêtre glissante
+        │
+        ▼
+Détection d'anomalie
+        │
+        ▼
+Confirmation de plusieurs anomalies
+        │
+        ▼
+     ALERTE
+     
 ## Installation
 python -m venv .venv
 .venv\Scripts\Activate.ps1
