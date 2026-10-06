@@ -7,12 +7,13 @@ MQTT_USERNAME (ia-prediction, lecture seule), MQTT_PASSWORD.
 """
 
 import json
+import importlib
 import os
 import queue
 from urllib.parse import urlparse
 
 import numpy as np
-import paho.mqtt.client as mqtt
+mqtt = importlib.import_module("paho.mqtt.client")
 
 COUPURE = None  # la série est interrompue : la fenêtre glissante doit être vidée
 
