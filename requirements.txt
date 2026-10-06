@@ -2,6 +2,6 @@ numpy
 scikit-learn
 pandas
 joblib
-paho-mqtt
+paho-mqtt>=2.0
 requests
 python-dotenv
