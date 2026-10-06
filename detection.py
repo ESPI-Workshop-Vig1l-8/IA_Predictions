@@ -25,6 +25,27 @@ def flux_fictif (scenario, acceleration):
 
 def main () : 
     parseur = argparse.ArgumentParser
+    parseur.add_argument("--scenario", default="derive", choices=["normal", "derive", "pic_gaz"])
+    parseur.add_argument("--acceleration", type=float, default=20)
+    args = parseur.parse_args()
 
+    modele = joblib.load(fichier_modele)
+    fenetre = deque(maxlen = taille_fenetre)
+    consecutives = 0 
+    alerte_deja_levee = False
 
+    print (f"Scénario: {args.scenario} | accélération : {args.acceleration}x")
 
+    for i, mesure in flux_fictif(args.scenario, args.acceleration) :
+        fenetre.append(mesure)
+        temp, hum, gaz = mesure
+
+        if len(fenetre) < taille_fenetre :
+            print(f"[{i * periode:5d}s] remplissage de la fenêtre ({len(fenetre)}/{taille_fenetre})", end="\r")
+            continue
+
+        x = extraire(np.array(fenetre)).reshape(1, -1)
+        score = float (modele.decision_function(x)[0])
+        anormal = modele.predict(x)[0] == -1
+        consecutives = consecutives + 1 if anormal else 0
+        alerte = consecutives >= k_confirmation
