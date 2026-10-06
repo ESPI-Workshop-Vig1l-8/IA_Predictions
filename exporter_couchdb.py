@@ -1,5 +1,5 @@
 """
-Export des mesures CouchDB vers un CSV d'entraînement (format de generer_données.py).
+Export des mesures CouchDB vers un CSV d'entraînement (colonnes de generer_données.py).
 
     python exporter_couchdb.py --appareil VIG1L-8-NODE04 --debut 2026-10-06T08:00 --fin 2026-10-07T08:00
 
@@ -24,6 +24,8 @@ from datetime import datetime, timedelta
 import pandas as pd
 import requests
 
+from generer_données import colonnes as colonnes_modele
+
 try:
     from dotenv import load_dotenv
     load_dotenv()
@@ -32,7 +34,8 @@ except ImportError:
 
 periode = 2               # secondes entre deux mesures (comme generer_données.py)
 taille_fenetre = 60       # comme caracteristiques.py
-colonnes = {"temp_c": "temperature", "hum_pct": "humidite", "gas_mv": "gaz"}
+# Champs CouchDB -> colonnes attendues par le modèle (mêmes noms que generer_données.py)
+colonnes = dict(zip(["temp_c", "hum_pct", "gas_mv"], colonnes_modele))
 
 
 def connexion():
@@ -128,7 +131,7 @@ def main():
     parser.add_argument("--appareil", default="VIG1L-8-NODE04")
     parser.add_argument("--debut", default=(maintenant - timedelta(days=1)).isoformat(timespec="minutes"),
                         help="date ISO, heure locale (défaut : il y a 24 h)")
-    parser.add_argument("--fin", default=maintenant.isoformat(timespec="minutes"),
+    parser.add_argument("--fin", default=maintenant.isoformat(timespec="seconds"),
                         help="date ISO, heure locale (défaut : maintenant)")
     parser.add_argument("--sortie", default="donnees/normal.csv")
     parser.add_argument("--garder-annotations", action="store_true",
