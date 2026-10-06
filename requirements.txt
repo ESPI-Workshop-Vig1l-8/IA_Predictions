@@ -3,3 +3,5 @@ scikit-learn
 pandas
 joblib
 paho-mqtt
+requests
+python-dotenv
