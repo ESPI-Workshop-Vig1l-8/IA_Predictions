@@ -22,4 +22,14 @@ def fenetres (mesures, taille = taille_fenetre, pas = 1) :
     mesures = np.asarray(mesures, dtype = float)
     fins = np.arange(taille - 1, len(mesures), pas)
     X = np.array([extraire(mesures[fin - taille + 1: fin + 1]) for fin in fins])
+
     return X, fins
+
+# confirmation d'anomalie, si 3 fenetres consécutives sont anormales, on confirme l'anomalie
+def confirmer (drapeaux, k=3) : 
+    sortie = np.zeros(len(drapeaux), dtype = bool)
+    serie = 0
+    for i, d in enumerate (drapeaux) : 
+        serie = serie + 1 if d else 0
+        sortie [i] = serie >= k
+    return sortie
