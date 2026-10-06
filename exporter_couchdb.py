@@ -138,8 +138,15 @@ def main():
     args = parser.parse_args()
 
     session, url = connexion()
-    docs = lire_mesures(session, url, args.appareil, date_ms(args.debut), date_ms(args.fin))
-    annotations = lire_annotations(session, url, args.appareil)
+    try:
+        docs = lire_mesures(session, url, args.appareil, date_ms(args.debut), date_ms(args.fin))
+        annotations = lire_annotations(session, url, args.appareil)
+    except requests.HTTPError as erreur:
+        if erreur.response.status_code == 401:
+            raise SystemExit(f"Accès refusé par {url} : vérifier COUCHDB_USER / COUCHDB_PASSWORD")
+        raise
+    except requests.ConnectionError:
+        raise SystemExit(f"CouchDB injoignable sur {url} (serveur démarré ? tunnel SSH ?)")
     donnees, rejets = convertir(docs, annotations, args.garder_annotations, args.taille_min)
 
     print(f"{len(docs)} mesures lues pour {args.appareil} ({args.debut} -> {args.fin})")
