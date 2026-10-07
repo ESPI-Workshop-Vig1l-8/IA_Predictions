@@ -41,7 +41,7 @@ Copier .env.example en .env et renseigner les valeurs.
 python exporter_couchdb.py --appareil VIG1L-8-NODE04 --debut 2026-10-06T08:00 --fin 2026-10-07T08:00
 ```
 
-- Connexion : `COUCHDB_URL`, `COUCHDB_USER`, `COUCHDB_PASSWORD` dans `.env` (utilisateur `ia`, lecture seule). CouchDB n'écoute que sur `127.0.0.1:5984` du serveur : depuis un autre PC, passer par un tunnel SSH (`ssh -L 5984:127.0.0.1:5984 <serveur>`).
+- Connexion : `COUCHDB_URL`, `COUCHDB_USER`, `COUCHDB_PASSWORD` (utilisateur `ia`, lecture seule). Dans la stack `infra`, CouchDB n'est **pas publié** sur l'hôte : il n'est joignable que depuis les conteneurs. Lancer donc ces scripts dans le conteneur (`docker compose run --rm ia-prediction python exporter_couchdb.py …`), ou, depuis un autre PC, utiliser le bouton **Exporter CSV** du dashboard (même format, mêmes règles de nettoyage) et entraîner avec `python entrainement.py` sur ce fichier copié dans `donnees/normal.csv`.
 - Seules les mesures normales sont gardées : DHT22 en erreur, préchauffage du MQ-2 et périodes annotées (tests) sont retirés. `--garder-annotations` les conserve pour évaluer le modèle.
 - Colonne `segment` : les mesures sont découpées en séries continues (pas de message perdu, de redémarrage ni de trou). Une fenêtre ne doit pas chevaucher deux segments.
 - Sortie par défaut : `donnees/normal.csv`, utilisée par `entrainement.py`.
@@ -75,7 +75,7 @@ python entrainement.py --source couchdb --debut 2026-10-06T08:00 --fin 2026-10-0
 - Un seul envoi par niveau et par épisode ; l'épisode se termine après 15 fenêtres normales (30 s).
 - Mêmes règles qu'à l'entraînement : une mesure invalide (DHT22 en erreur, MQ-2 en préchauffage), un message perdu ou un redémarrage vide la fenêtre glissante (60 mesures, 2 min).
 - Dans la stack `infra`, le service `ia-prediction` lance cette commande automatiquement (image construite depuis ce dépôt, `Dockerfile`).
-- Depuis le PC serveur : renseigner `.env` (voir `.env.example.txt` : CouchDB sur `127.0.0.1:5984`, backend via le dashboard sur `10443`).
+- Hors Docker (tests) : renseigner `.env` (voir `.env.example.txt`) avec une instance CouchDB joignable ; dans la stack `infra`, CouchDB n'est accessible que depuis les conteneurs.
 - `python detection.py --scenario derive --envoyer` envoie les alertes d'une simulation (avec `DEVICE_ID` pour faire clignoter la LED d'un nœud) : utile pour une démonstration.
 - `FICHIER_MODELE` : modèle utilisé par `detection.py` et écrit par `entrainement.py` (défaut `modele_anomalies.joblib` ; dans la stack infra, `/models/modele_anomalies.joblib` sur un volume). S'il n'existe pas encore, `detection.py` utilise le modèle livré avec le dépôt.
 - Réentraîner dans la stack infra, puis relancer la détection :
