@@ -60,7 +60,12 @@ python entrainement.py --source couchdb --debut 2026-10-06T08:00 --fin 2026-10-0
 - Les données utilisées sont aussi écrites dans `donnees/normal.csv` ; `python entrainement.py` (source `csv`) réentraîne à partir de ce fichier.
 
 ## Détection en temps réel
-`detection.py --source mqtt` lit la télémétrie de tous les nœuds sur le broker et envoie les alertes au backend (`POST /api/v1/alerts`, jeton service) :
+`detection.py --source couchdb` lit les nouvelles mesures de tous les nœuds **dans CouchDB** (flux `_changes` de la base `telemetry`, compte `ia` en lecture seule) et envoie les alertes au backend (`POST /api/v1/alerts`, jeton service) :
+
+- Seul le backend écrit en base, après validation des messages : l'IA ne lit que des données sûres et n'a aucun accès au broker MQTT.
+- Le backend écrit par lots toutes les 2 s, et le flux `_changes` n'est pas ordonné entre les shards de la base : les mesures sont gardées 3 s puis traitées dans l'ordre de `received_at`. Au total, environ 5 s de retard, négligeable devant des fenêtres de 2 minutes.
+- À la première mesure d'un nœud, ses 2 dernières minutes sont relues en base : la détection démarre tout de suite, même après un redémarrage du service.
+
 
 | Niveau | Quand | Effet |
 |---|---|---|
@@ -70,7 +75,7 @@ python entrainement.py --source couchdb --debut 2026-10-06T08:00 --fin 2026-10-0
 - Un seul envoi par niveau et par épisode ; l'épisode se termine après 15 fenêtres normales (30 s).
 - Mêmes règles qu'à l'entraînement : une mesure invalide (DHT22 en erreur, MQ-2 en préchauffage), un message perdu ou un redémarrage vide la fenêtre glissante (60 mesures, 2 min).
 - Dans la stack `infra`, le service `ia-prediction` lance cette commande automatiquement (image construite depuis ce dépôt, `Dockerfile`).
-- Depuis le PC serveur : renseigner `.env` (voir `.env.example.txt` : broker en TLS sur `18883` avec `ca.crt` de l'infra, backend via le dashboard sur `10443`).
+- Depuis le PC serveur : renseigner `.env` (voir `.env.example.txt` : CouchDB sur `127.0.0.1:5984`, backend via le dashboard sur `10443`).
 - `python detection.py --scenario derive --envoyer` envoie les alertes d'une simulation (avec `DEVICE_ID` pour faire clignoter la LED d'un nœud) : utile pour une démonstration.
 - `FICHIER_MODELE` : modèle utilisé par `detection.py` et écrit par `entrainement.py` (défaut `modele_anomalies.joblib` ; dans la stack infra, `/models/modele_anomalies.joblib` sur un volume). S'il n'existe pas encore, `detection.py` utilise le modèle livré avec le dépôt.
 - Réentraîner dans la stack infra, puis relancer la détection :
