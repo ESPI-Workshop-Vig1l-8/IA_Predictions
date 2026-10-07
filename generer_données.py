@@ -32,7 +32,7 @@ def generer_serie(n, scenario="normal", debut_anomalie=None, graine=None):
     )
 
     # Niveau normal de gaz
-    gaz = 150 + rng.normal(0, 4, n)
+    gaz = 250 + rng.normal(0, 4, n)
 
     # Définition des scénarios avec anomalie
     if scenario != "normal":

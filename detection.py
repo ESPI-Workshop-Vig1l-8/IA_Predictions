@@ -43,7 +43,7 @@ k_avertissement = 2
 k_confirmation = 5
 fin_episode = 15  # 15 fenêtres normales (30 s) avant de pouvoir relancer une alerte
 
-seuil_critique_temp = 40
+seuil_critique_temp = 50
 seuil_critique_gaz = 400
 
 
