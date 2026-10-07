@@ -1,7 +1,7 @@
 """
 Détection d'anomalies en continu.
 
-    python detection.py --source mqtt                 # vraies mesures, alertes envoyées au backend
+    python detection.py --source couchdb              # vraies mesures (base CouchDB), alertes envoyées au backend
     python detection.py --scenario derive             # simulation (pas d'envoi)
     python detection.py --scenario derive --envoyer   # simulation, alertes envoyées au backend
 
@@ -79,7 +79,7 @@ def flux_fictif(scenario, acceleration):
 
     for ligne in serie[colonnes].to_numpy():
         time.sleep(periode / acceleration)
-        yield "simulation", ligne
+        yield "simulation", ligne, False
 
 
 class Detecteur:
@@ -155,8 +155,8 @@ def main():
     parseur.add_argument(
         "--source",
         default="simulation",
-        choices=["simulation", "mqtt"],
-        help="simulation : données générées ; mqtt : télémétrie réelle des nœuds."
+        choices=["simulation", "couchdb"],
+        help="simulation : données générées ; couchdb : nouvelles mesures des nœuds lues en base."
     )
 
     parseur.add_argument(
@@ -176,7 +176,7 @@ def main():
     parseur.add_argument(
         "--envoyer",
         action="store_true",
-        help="Envoyer aussi les alertes de la simulation au backend (toujours fait avec --source mqtt)."
+        help="Envoyer aussi les alertes de la simulation au backend (toujours fait avec --source couchdb)."
     )
 
     args = parseur.parse_args()
@@ -201,14 +201,14 @@ def main():
         return
 
     client = None
-    if args.source == "mqtt" or args.envoyer:
+    if args.source == "couchdb" or args.envoyer:
         from alertes import ClientAlertes
         client = ClientAlertes()
 
-    if args.source == "mqtt":
-        from flux_mqtt import flux_mqtt, COUPURE
-        flux = flux_mqtt()
-        print("Source : télémétrie MQTT réelle")
+    if args.source == "couchdb":
+        from flux_couchdb import flux_couchdb, COUPURE
+        flux = flux_couchdb()
+        print("Source : mesures réelles lues dans CouchDB (validées par le backend)")
     else:
         COUPURE = None
         flux = flux_fictif(args.scenario, args.acceleration)
@@ -221,11 +221,11 @@ def main():
 
     # Traitement du flux
 
-    for appareil, mesure in flux:
+    for appareil, mesure, historique in flux:
         detecteur = detecteurs.setdefault(appareil, Detecteur(modele))
 
         if mesure is COUPURE:
-            if len(detecteur.fenetre):
+            if len(detecteur.fenetre) and not historique:
                 print(f"[{appareil}] coupure de la série (mesure invalide, préchauffage, perte ou redémarrage) : fenêtre vidée")
             detecteur.couper()
             continue
@@ -233,6 +233,11 @@ def main():
         etat, score, nouveau = detecteur.traiter(mesure)
         temp, hum, gaz = mesure
         t = detecteur.n * periode
+
+        # Mesures préchargées après un démarrage : elles remplissent la fenêtre et
+        # mettent à jour le niveau d'alerte, sans rien afficher ni envoyer
+        if historique:
+            continue
 
         # Affichage
         if score is None:

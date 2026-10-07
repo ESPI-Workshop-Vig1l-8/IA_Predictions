@@ -1,4 +1,4 @@
-# Détection d'anomalies en continu (Isolation Forest) sur la télémétrie MQTT
+# Détection d'anomalies en continu (Isolation Forest) sur les mesures lues dans CouchDB
 FROM python:3.12-slim
 WORKDIR /app
 RUN useradd -r -u 10001 ia
@@ -9,4 +9,4 @@ COPY . .
 RUN mkdir -p /models donnees && chown -R ia /models donnees
 USER ia
 ENV PYTHONUNBUFFERED=1
-CMD ["python", "detection.py", "--source", "mqtt"]
+CMD ["python", "detection.py", "--source", "couchdb"]
