@@ -1,13 +1,8 @@
 """
 Entraînement de l'Isolation Forest.
 
-    python entrainement.py                      # données simulées : donnees/normal.csv
-    python entrainement.py --source couchdb     # vraies mesures du backend (24 dernières heures)
-    python entrainement.py --source couchdb --debut 2026-10-06T08:00 --fin 2026-10-07T08:00
-
-Avec --source couchdb, les mesures sont lues avec exporter_couchdb.py (mesures
-normales seulement, découpées en segments continus) et le modèle est évalué sur
-les périodes annotées (tests au briquet, souffle chaud...).
+    python entrainement.py                      # données recupérées du backend : donnees/normal.csv
+    
 """
 
 import argparse
