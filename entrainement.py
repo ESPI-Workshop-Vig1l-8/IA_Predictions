@@ -1,7 +1,7 @@
 """
 Entraînement de l'Isolation Forest.
 
-    python entrainement.py                      # données recupérées du backend : donnees/normal.csv
+    python entrainement.py                      # données recupérées après étalonnage : donnees/normal.csv
     
 """
 
