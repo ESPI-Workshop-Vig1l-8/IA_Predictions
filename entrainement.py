@@ -66,7 +66,7 @@ def entrainer(donnees=None):
 
 # Tester le modèle sur des séries de données neuves
 def evaluer(modele):
-    print("\n--- Evaluation sur donnees simulées neuves ---")
+    print("\n--- Evaluation sur donnees récupérées ---")
     n = 20 * 60 // periode
     debut = n // 3
 
